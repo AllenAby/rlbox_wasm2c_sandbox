@@ -182,7 +182,7 @@ void reset_wasm2c_memory(wasm_rt_memory_t* memory){
   if (memory->data != 0) {
     // const size_t opt_offset = 0xff000; // TODO: programatically set this based on sandbox metadata
                                           // havent found a pointer to the bottom of the stack in metadata yet though
-    const size_t opt_offset = 0xff000;
+    const size_t opt_offset = 0;
     const uint64_t size_to_wipe = memory->size - opt_offset;
     const uint64_t addr_to_wipe = memory->data + opt_offset;
 
@@ -192,7 +192,7 @@ void reset_wasm2c_memory(wasm_rt_memory_t* memory){
     // fclose(fptr);
     // printf("dumping succeeded\n");
     
-    printf("\twasm2c: wiping memory at 0x%llx, size: 0x%llx\n", addr_to_wipe, size_to_wipe);
+    // printf("\twasm2c: wiping memory at 0x%llx, size: 0x%llx\n", addr_to_wipe, size_to_wipe);
     memset((void*)addr_to_wipe, 0, size_to_wipe);
   }
 }
