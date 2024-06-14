@@ -556,10 +556,8 @@ public:
     }
 
 
-    // TODO: is this the right place to stash the globals?? (some things that later get initialized seem to be overwritten)
+    // Stash 'globals': the global variables & other memory in the wasm data segment.
     stash_globals();
-
-    // dump_memory("dumps/state_start.txt", "dumps/memory_start.txt");
 
     instance_initialized = true;
 
@@ -567,53 +565,26 @@ public:
   }
 
   inline void impl_reset_sandbox() { 
-
-    // dump_memory("dumps/state_pre.txt", "dumps/memory_pre.txt");
-
-    // 1. wipe all memory
+    // Zero all sandbox memory.
     reset_wasm2c_memory(&sandbox_memory_info);
 
-    // FILE* fptr;
-    // // first we dump wasm2c_instance state
-    // fptr = fopen("dumps/globals.txt", "w");
-    // fwrite(stashed_globals, stashed_globals_size, 1, fptr);
-    // fclose(fptr);
-
-    // 2. restore stashed globals
+    // Restore the data segment.
     restore_stashed_globals();
 
-    // dump_memory("dumps/state_post.txt", "dumps/memory_post.txt");
-
-    // 3. restore wasm instance state
-
-    // ?. clear 'return slot' metadata for fn callback
+    // Reset other sandbox state to avoid sidechannels.
     return_slot_size = 0;
     return_slot = 0;
-
-    // 4+. consider other sidechannels
-
-    // FIXME: i think that's it for sandbox state, but make sure
-    
   }
 
   inline void stash_globals() {
-    // TODO: why can you print to std error a crap ton? (probably things we fix here with the stashed globals)
-    // Notes: 
-    // - you can print multiple times to stderr from within the sandbox and it does show up on screen
-    //
-
-    // FIXME: this method makes it so that you can write one out every print
     stashed_globals_size = this->wasm2c_instance.w2c_0x5F_data_end  // end of the saved region
                           - this->wasm2c_instance.w2c_g0;           // start of the saved region
-    // stashed_globals_size = 0xbc0;
 
     stashed_globals = malloc(stashed_globals_size);
 
     if (stashed_globals != 0) {
-      uint8_t * stash_start =
-        this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
+      uint8_t * stash_start = this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
       std::memcpy(stashed_globals, stash_start, stashed_globals_size);
-      // printf("memcpy successful, yayy\n");
     } else {
       printf("error mallocing globals stash\n");
       stashed_globals_size = 0;
@@ -623,59 +594,9 @@ public:
   inline void restore_stashed_globals(){
     uint8_t * stash_start =
         this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
-    // printf("\twasm2c: restoring data segment from %p to %p\n",
-          //  stash_start,
-          //  stash_start + stashed_globals_size);
+    
     std::memcpy(stash_start, stashed_globals, stashed_globals_size);
   }
-
-  // inline void dump_memory(const char* state, const char* memory){
-  //   FILE* fptr;
-  //   // first we dump wasm2c_instance state
-  //   fptr = fopen(state, "w");
-  //   fprintf(fptr, "heap_base: 0x%lx\n", heap_base);
-  //   fprintf(fptr, "w2c_g0: 0x%x\n", wasm2c_instance.w2c_g0);
-  //   // fprintf(fptr, "w2c_SECRET_NUM: 0x%x\n", wasm2c_instance.w2c_SECRET_NUM);
-  //   // fprintf(fptr, "w2c_CONST_SECRET_NUM2: 0x%x\n\n", wasm2c_instance.w2c_CONST_SECRET_NUM2);
-
-  //   fprintf(fptr, "w2c_0x5F_heap_base: 0x%x\n", wasm2c_instance.w2c_0x5F_heap_base);
-  //   fprintf(fptr, "w2c_0x5F_stdin_used: 0x%x\n", wasm2c_instance.w2c_0x5F_stdin_used);
-  //   fprintf(fptr, "w2c_0x5F_stderr_used: 0x%x\n", wasm2c_instance.w2c_0x5F_stderr_used);
-  //   fprintf(fptr, "w2c_0x5F_stdout_used: 0x%x\n", wasm2c_instance.w2c_0x5F_stdout_used);
-  //   fprintf(fptr, "w2c_stderr: 0x%x\n", wasm2c_instance.w2c_stderr);
-  //   fprintf(fptr, "w2c_stdout: 0x%x\n", wasm2c_instance.w2c_stdout);
-  //   // fprintf(fptr, "w2c_0x5F_stderr_used: 0x%x\n\n", wasm2c_instance.w2c_0x5F_stderr_used);
-
-  //   fprintf(fptr, "w2c_errno: 0x%x\n", wasm2c_instance.w2c_errno);
-  //   // fprintf(fptr, "w2c_0x5F_progname: 0x%x\n", wasm2c_instance.w2c_0x5F_progname);
-  //   // fprintf(fptr, "w2c_0x5F_progname_full: 0x%x\n", wasm2c_instance.w2c_0x5F_progname_full);
-  //   // fprintf(fptr, "w2c_program_invocation_short_name: 0x%x\n", wasm2c_instance.w2c_program_invocation_short_name);
-  //   // fprintf(fptr, "w2c_program_invocation_name: 0x%x\n\n", wasm2c_instance.w2c_program_invocation_name);
-
-
-  //   fprintf(fptr, "w2c_0x5F_dso_handle: 0x%x\n", wasm2c_instance.w2c_0x5F_dso_handle);
-  //   fprintf(fptr, "w2c_0x5F_data_end: 0x%x\n", wasm2c_instance.w2c_0x5F_data_end);
-  //   fprintf(fptr, "w2c_0x5F_global_base: 0x%x\n", wasm2c_instance.w2c_0x5F_global_base);
-  //   fprintf(fptr, "w2c_0x5F_memory_base: 0x%x\n", wasm2c_instance.w2c_0x5F_memory_base);
-  //   fprintf(fptr, "w2c_0x5F_table_base: 0x%x\n\n", wasm2c_instance.w2c_0x5F_table_base);
-
-  //   // fprintf(fptr, "w2c_0x5F_libc: 0x%x\n", wasm2c_instance.w2c_0x5F_libc);
-  //   // fprintf(fptr, "w2c_0x5F_hwcap: 0x%x\n", wasm2c_instance.w2c_0x5F_hwcap);
-  //   fprintf(fptr, "w2c_0x5F_stdout_FILE: 0x%x\n", wasm2c_instance.w2c_0x5F_stdout_FILE);
-  //   fprintf(fptr, "w2c_0x5F_stderr_FILE: 0x%x\n", wasm2c_instance.w2c_0x5F_stderr_FILE);
-  //   // fprintf(fptr, "w2c_0x5F_libc: 0x%x\n", wasm2c_instance.w2c_0x5F_libc);
-  //   // fprintf(fptr, "w2c_0x5F_libc: 0x%x\n", wasm2c_instance.w2c_0x5F_libc);
-
-
-  //   fclose(fptr);
-  //   // printf("dumping state succeeded (to %s)\n", state);
-
-  //   // then we dump memory contents
-  //   fptr = fopen(memory, "w");
-  //   fwrite(sandbox_memory_info.data, sandbox_memory_info.size, 1, fptr);
-  //   fclose(fptr);
-  //   // printf("dumping memory succeeded (to %s)\n", memory);
-  // }
 
 #undef FALLIBLE_DYNAMIC_CHECK
 
@@ -685,8 +606,8 @@ public:
       impl_free_in_sandbox(return_slot);
     }
 
+    // Free the global vars we stashed on sandbox creation.
     if (stashed_globals_size){
-      // printf("freeing stashed globals");
       free(stashed_globals);
     }
 
