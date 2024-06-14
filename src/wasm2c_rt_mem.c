@@ -183,8 +183,18 @@ void reset_wasm2c_memory(wasm_rt_memory_t* memory){
     const uint64_t size_to_wipe = memory->size - opt_offset;
     const uint64_t addr_to_wipe = memory->data + opt_offset;
 
+    // #ifdef __linux__
+    // // If we are using linux, we can use madvise() instead of memset because it's faster.
+    // madvise((void*)addr_to_wipe, size_to_wipe, MADV_REMOVE);
+
+    // #else
+    // TODO: is there a better way to do this on mac?
+
+    // If not, we can just memset it normally.
     memset((void*)addr_to_wipe, 0, size_to_wipe);
+    // #endif
   }
+  
 }
 
 #undef WASM_HEAP_DEFAULT_MAX_PAGES
