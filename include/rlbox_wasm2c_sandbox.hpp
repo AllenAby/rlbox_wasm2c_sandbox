@@ -22,6 +22,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <string.h>
+#include <stdio.h>
 
 #if defined(_WIN32)
 // Ensure the min/max macro in the header doesn't collide with functions in
@@ -303,7 +305,7 @@ public:
   using T_ShortType = int16_t;
 
 private:
-  mutable typename RLBOX_WASM_MODULE_TYPE_CURR::instance_t wasm2c_instance{ 0 };
+  mutable typename RLBOX_WASM_MODULE_TYPE_CURR::instance_t wasm2c_instance{ 0 }; // this has all the metadata
   struct w2c_env sandbox_memory_env;
   struct w2c_wasi__snapshot__preview1 wasi_env;
   bool instance_initialized = false;
@@ -311,8 +313,11 @@ private:
   mutable wasm_rt_funcref_table_t sandbox_callback_table;
   uintptr_t heap_base;
   size_t return_slot_size = 0;
-  T_PointerType return_slot = 0;
+  T_PointerType return_slot = 0;    // for storing which function to return too when using fn pointers
   mutable std::vector<T_PointerType> callback_free_list;
+
+  void* stashed_globals = 0;
+  size_t stashed_globals_size = 0;
 
   static const size_t MAX_CALLBACKS = 128;
   mutable RLBOX_SHARED_LOCK(callback_mutex);
@@ -320,7 +325,7 @@ private:
   void* callbacks[MAX_CALLBACKS]{ 0 };
   uint32_t callback_slot_assignment[MAX_CALLBACKS]{ 0 };
   mutable std::map<const void*, uint32_t> internal_callbacks;
-  mutable std::map<uint32_t, const void*> slot_assignments;
+  mutable std::map<uint32_t, const void*> slot_assignments; // what is this for? i think function callbacks
 
 #ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
   thread_local static inline rlbox_wasm2c_sandbox_thread_data thread_data{ 0,
@@ -492,6 +497,7 @@ public:
     bool infallible = true,
     const w2c_mem_capacity* custom_capacity = nullptr)
   {
+    // printf("creaitng sandbox in inner yayy\n");
     FALLIBLE_DYNAMIC_CHECK(
       infallible, instance_initialized == false, "Sandbox already initialized");
 
@@ -549,9 +555,47 @@ public:
                              "Sandbox heap not aligned to 4GB");
     }
 
+
+    // Stash 'globals': the global variables & other memory in the wasm data segment.
+    stash_globals();
+
     instance_initialized = true;
 
     return true;
+  }
+
+  inline void impl_reset_sandbox() { 
+    // Zero all sandbox memory.
+    reset_wasm2c_memory(&sandbox_memory_info);
+
+    // Restore the data segment.
+    restore_stashed_globals();
+
+    // Reset other sandbox state to avoid sidechannels.
+    return_slot_size = 0;
+    return_slot = 0;
+  }
+
+  inline void stash_globals() {
+    stashed_globals_size = this->wasm2c_instance.w2c_0x5F_data_end  // end of the saved region
+                          - this->wasm2c_instance.w2c_g0;           // start of the saved region
+
+    stashed_globals = malloc(stashed_globals_size);
+
+    if (stashed_globals != 0) {
+      uint8_t * stash_start = this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
+      std::memcpy(stashed_globals, stash_start, stashed_globals_size);
+    } else {
+      printf("error mallocing globals stash\n");
+      stashed_globals_size = 0;
+    }
+  }
+
+  inline void restore_stashed_globals(){
+    uint8_t * stash_start =
+        this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
+    
+    std::memcpy(stash_start, stashed_globals, stashed_globals_size);
   }
 
 #undef FALLIBLE_DYNAMIC_CHECK
@@ -560,6 +604,11 @@ public:
   {
     if (return_slot_size) {
       impl_free_in_sandbox(return_slot);
+    }
+
+    // Free the global vars we stashed on sandbox creation.
+    if (stashed_globals_size){
+      free(stashed_globals);
     }
 
     if (instance_initialized) {

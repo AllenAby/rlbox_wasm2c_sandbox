@@ -36,6 +36,8 @@ static void* os_mmap_aligned(void* addr,
                              size_t alignment_offset);
 // Unreserve the memory space
 static void os_munmap(void* addr, size_t size);
+// Get OS pagesize
+static size_t os_getpagesize();
 // Allocates and sets the permissions on the previously reserved memory space
 // Returns 0 on success, non zero on failure.
 static int os_mmap_commit(void* curr_heap_end_pointer,
@@ -173,6 +175,26 @@ void destroy_wasm2c_memory(wasm_rt_memory_t* memory)
     os_munmap(memory->data, heap_reserve_size);
     memory->data = 0;
   }
+}
+
+void reset_wasm2c_memory(wasm_rt_memory_t* memory){
+  if (memory->data != 0) {
+    const size_t opt_offset = 0;
+    const uint64_t size_to_wipe = memory->size - opt_offset;
+    const uint64_t addr_to_wipe = memory->data + opt_offset;
+
+    // #ifdef __linux__
+    // // If we are using linux, we can use madvise() instead of memset because it's faster.
+    // madvise((void*)addr_to_wipe, size_to_wipe, MADV_REMOVE);
+
+    // #else
+    // TODO: is there a better way to do this on mac?
+
+    // If not, we can just memset it normally.
+    memset((void*)addr_to_wipe, 0, size_to_wipe);
+    // #endif
+  }
+  
 }
 
 #undef WASM_HEAP_DEFAULT_MAX_PAGES
