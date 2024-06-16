@@ -565,11 +565,14 @@ public:
   }
 
   inline void impl_reset_sandbox() { 
+    uint8_t* data_start = this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
+
     // Zero all sandbox memory.
-    reset_wasm2c_memory(&sandbox_memory_info);
+    reset_wasm2c_memory(&sandbox_memory_info, data_start, stashed_globals_size);
 
     // Restore the data segment.
-    restore_stashed_globals();
+    
+    std::memcpy(data_start, stashed_globals, stashed_globals_size);
 
     // Reset other sandbox state to avoid sidechannels.
     return_slot_size = 0;
@@ -589,13 +592,6 @@ public:
       printf("error mallocing globals stash\n");
       stashed_globals_size = 0;
     }
-  }
-
-  inline void restore_stashed_globals(){
-    uint8_t * stash_start =
-        this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
-    
-    std::memcpy(stash_start, stashed_globals, stashed_globals_size);
   }
 
 #undef FALLIBLE_DYNAMIC_CHECK

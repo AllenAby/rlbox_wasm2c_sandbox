@@ -178,22 +178,28 @@ void destroy_wasm2c_memory(wasm_rt_memory_t* memory)
   }
 }
 
-void reset_wasm2c_memory(wasm_rt_memory_t* memory){
+void reset_wasm2c_memory(wasm_rt_memory_t* memory, uint8_t* data_start, size_t data_size){
   if (memory->data != 0) {
     const size_t opt_offset = 0;
-    const uint64_t size_to_wipe = memory->size - opt_offset;
-    const uint64_t addr_to_wipe = memory->data + opt_offset;
+    const uint64_t addr_to_wipe1 = memory->data;
+    const uint64_t size_to_wipe1 = data_start - memory->data;
+    const uint64_t addr_to_wipe2 = data_start + data_size;
+    const uint64_t size_to_wipe2 = memory->size + memory->data - data_start - data_size;
 
     #ifdef __linux__
     // If we are using linux, we can use madvise() instead of memset because it's faster.
     madvise((void*)addr_to_wipe, size_to_wipe, MADV_REMOVE);
 
     #elif defined(__APPLE__)
-    // #include <sys/mman.h>
     // TODO: is there a better way to do this on mac?
-    madvise((void*)addr_to_wipe, size_to_wipe, MADV_FREE);
+    // printf("1st madvising from 0x%llx w size 0x%zx\n", addr_to_wipe1, size_to_wipe1);
+    madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_FREE);
+    // printf("2nd madvising from 0x%llx w size 0x%zx\n", addr_to_wipe2, size_to_wipe2);
+    madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_FREE);
+    // madvise((void*)memory->data, memory->size, MADV_FREE);
+    // memset((void*)memory->data, 0, memory->size);
 
-    #else
+#else
     // If not, we can just memset it normally.
     memset((void*)addr_to_wipe, 0, size_to_wipe);
     #endif
