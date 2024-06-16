@@ -202,22 +202,23 @@ void reset_wasm2c_memory(wasm_rt_memory_t* memory, uint8_t* data_start, size_t d
     // int i = madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_DONTNEED);
     // memset((void*)addr_to_wipe1, 0, 1);
     // memset((void*)addr_to_wipe1, 0, size_to_wipe1);
-    int i;
-    int i2;
-    printf("1st madvising from 0x%llx w size 0x%zx w code %d\n",
-           addr_to_wipe1,
-           size_to_wipe1,
-           i);
+    int i = mmap(memory->data, memory->size, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);;
+    // int i2;
+    // printf("attempted to mmap whole thing with success %d", i);
+    // printf("1st madvising from 0x%llx w size 0x%zx w code %d\n",
+    //        addr_to_wipe1,
+    //        size_to_wipe1,
+    //        i);
 
     // madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_DONTNEED);
     // int i2 = madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_DONTNEED);
     // int i2;
     // memset((void*)addr_to_wipe2, 0, 1);
     // memset((void*)addr_to_wipe2, 0, size_to_wipe2);
-    printf("2nd madvising from 0x%llx w size 0x%zx w code %d\n", addr_to_wipe2, size_to_wipe2, i2);
+    // printf("2nd madvising from 0x%llx w size 0x%zx w code %d\n", addr_to_wipe2, size_to_wipe2, i2);
     // madvise((void*)memory->data, memory->size, MADV_FREE);
     // memset((void*)memory->data, 0, memory->size);
-    madvise((void*)memory->data, memory->size, MADV_FREE);
+    // madvise((void*)memory->data, memory->size, MADV_FREE);
 
 #else
     // If not, we can just memset it normally.

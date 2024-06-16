@@ -565,7 +565,7 @@ public:
   }
 
   inline void impl_reset_sandbox() { 
-    dump_memory("dumps/state_pre.txt", "dumps/memory_pre.txt");
+    // dump_memory("dumps/state_pre.txt", "dumps/memory_pre.txt");
 
     uint8_t* data_start = this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
 
@@ -575,7 +575,7 @@ public:
     // Restore the data segment.
     std::memcpy(data_start, stashed_globals, stashed_globals_size);
 
-    dump_memory("dumps/state_post.txt", "dumps/memory_post.txt");
+    // dump_memory("dumps/state_post.txt", "dumps/memory_post.txt");
 
     // Reset other sandbox state to avoid sidechannels.
     return_slot_size = 0;
