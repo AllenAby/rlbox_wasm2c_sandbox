@@ -19,6 +19,7 @@
 #  include <shared_mutex>
 #endif
 #include <string>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 #include <vector>
