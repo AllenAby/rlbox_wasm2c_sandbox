@@ -556,7 +556,7 @@ public:
     }
 
 
-    // Stash 'globals': the global variables & other memory in the wasm data segment.
+    // Stash 'globals'--the global variables & other memory in the wasm data segment.
     stash_globals();
 
     instance_initialized = true;
@@ -565,8 +565,6 @@ public:
   }
 
   inline void impl_reset_sandbox() { 
-    // dump_memory("dumps/state_pre.txt", "dumps/memory_pre.txt");
-
     uint8_t* data_start = this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
 
     // Zero all sandbox memory.
@@ -575,22 +573,9 @@ public:
     // Restore the data segment.
     std::memcpy(data_start, stashed_globals, stashed_globals_size);
 
-    // dump_memory("dumps/state_post.txt", "dumps/memory_post.txt");
-
     // Reset other sandbox state to avoid sidechannels.
     return_slot_size = 0;
     return_slot = 0;
-  }
-
-  inline void dump_memory(const char* state, const char* memory){
-    FILE* fptr;
-    // printf("dumping state succeeded (to %s)\n", state);
-
-    // then we dump memory contents
-    fptr = fopen(memory, "w");
-    fwrite(sandbox_memory_info.data, sandbox_memory_info.size, 1, fptr);
-    fclose(fptr);
-    printf("dumping memory succeeded (to %s)\n", memory);
   }
 
   inline void stash_globals() {
@@ -603,7 +588,7 @@ public:
       uint8_t * stash_start = this->sandbox_memory_info.data + this->wasm2c_instance.w2c_g0;
       std::memcpy(stashed_globals, stash_start, stashed_globals_size);
     } else {
-      printf("error mallocing globals stash\n");
+      fprintf(stderr, "error mallocing globals stash\n");
       stashed_globals_size = 0;
     }
   }

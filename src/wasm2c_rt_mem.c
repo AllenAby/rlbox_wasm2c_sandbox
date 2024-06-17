@@ -189,41 +189,17 @@ void reset_wasm2c_memory(wasm_rt_memory_t* memory, uint8_t* data_start, size_t d
 
     #ifdef __linux__
     // If we are using linux, we can use madvise() instead of memset because it's faster.
-    addr_to_wipe2 = addr_to_wipe2 / PAGESIZE * PAGESIZE; // has to be page aligned
+    addr_to_wipe2 = addr_to_wipe2 / PAGESIZE * PAGESIZE;          // addr has to be page aligned
+
+    // Two wipes to avoid dropping pages for the data segment just to reclaim them later.
     madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_DONTNEED);
     madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_DONTNEED);
-    // printf("just madvised from 0x%llx to 0x%llx with success %d\n", addr_to_wipe1, size_to_wipe1 + addr_to_wipe1, i1);
-    // printf("just madvised from 0x%llx to 0x%llx with success %d\n", addr_to_wipe2, size_to_wipe2 + addr_to_wipe2, i2);
-
-    #elif defined(__APPLE__)
-    // TODO: is there a better way to do this on mac?
     
-    // madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_DONTNEED);
-    // int i = madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_DONTNEED);
-    // memset((void*)addr_to_wipe1, 0, 1);
-    // memset((void*)addr_to_wipe1, 0, size_to_wipe1);
-    // int i = mmap(memory->data, memory->size, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+    #else
+    // If not on linux, we default to the safe but slower memset() to wipe sandbox memory.
     memset(memory->data, 0x0, memory->size);
-    // int i2;
-    // printf("attempted to mmap whole thing with success %d", i);
-    // printf("1st madvising from 0x%llx w size 0x%zx w code %d\n",
-    //        addr_to_wipe1,
-    //        size_to_wipe1,
-    //        i);
 
-    // madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_DONTNEED);
-    // int i2 = madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_DONTNEED);
-    // int i2;
-    // memset((void*)addr_to_wipe2, 0, 1);
-    // memset((void*)addr_to_wipe2, 0, size_to_wipe2);
-    // printf("2nd madvising from 0x%llx w size 0x%zx w code %d\n", addr_to_wipe2, size_to_wipe2, i2);
-    // madvise((void*)memory->data, memory->size, MADV_FREE);
-    // memset((void*)memory->data, 0, memory->size);
-    // madvise((void*)memory->data, memory->size, MADV_FREE);
-
-#else
-    // If not, we can just memset it normally.
-    memset((void*)addr_to_wipe, 0, size_to_wipe);
+    // mmap(memory->data, memory->size, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
     #endif
   }
   
