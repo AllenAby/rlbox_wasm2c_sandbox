@@ -584,43 +584,6 @@ public:
 
   inline void dump_memory(const char* state, const char* memory){
     FILE* fptr;
-    // first we dump wasm2c_instance state
-    fptr = fopen(state, "w");
-    fprintf(fptr, "heap_base: 0x%lx\n", heap_base);
-    fprintf(fptr, "w2c_g0: 0x%x\n", wasm2c_instance.w2c_g0);
-    // fprintf(fptr, "w2c_SECRET_NUM: 0x%x\n", wasm2c_instance.w2c_SECRET_NUM);
-    // fprintf(fptr, "w2c_CONST_SECRET_NUM2: 0x%x\n\n", wasm2c_instance.w2c_CONST_SECRET_NUM2);
-
-    fprintf(fptr, "w2c_0x5F_heap_base: 0x%x\n", wasm2c_instance.w2c_0x5F_heap_base);
-    fprintf(fptr, "w2c_0x5F_stdin_used: 0x%x\n", wasm2c_instance.w2c_0x5F_stdin_used);
-    fprintf(fptr, "w2c_0x5F_stderr_used: 0x%x\n", wasm2c_instance.w2c_0x5F_stderr_used);
-    fprintf(fptr, "w2c_0x5F_stdout_used: 0x%x\n", wasm2c_instance.w2c_0x5F_stdout_used);
-    fprintf(fptr, "w2c_stderr: 0x%x\n", wasm2c_instance.w2c_stderr);
-    fprintf(fptr, "w2c_stdout: 0x%x\n", wasm2c_instance.w2c_stdout);
-    // fprintf(fptr, "w2c_0x5F_stderr_used: 0x%x\n\n", wasm2c_instance.w2c_0x5F_stderr_used);
-
-    fprintf(fptr, "w2c_errno: 0x%x\n", wasm2c_instance.w2c_errno);
-    // fprintf(fptr, "w2c_0x5F_progname: 0x%x\n", wasm2c_instance.w2c_0x5F_progname);
-    // fprintf(fptr, "w2c_0x5F_progname_full: 0x%x\n", wasm2c_instance.w2c_0x5F_progname_full);
-    // fprintf(fptr, "w2c_program_invocation_short_name: 0x%x\n", wasm2c_instance.w2c_program_invocation_short_name);
-    // fprintf(fptr, "w2c_program_invocation_name: 0x%x\n\n", wasm2c_instance.w2c_program_invocation_name);
-
-
-    fprintf(fptr, "w2c_0x5F_dso_handle: 0x%x\n", wasm2c_instance.w2c_0x5F_dso_handle);
-    fprintf(fptr, "w2c_0x5F_data_end: 0x%x\n", wasm2c_instance.w2c_0x5F_data_end);
-    fprintf(fptr, "w2c_0x5F_global_base: 0x%x\n", wasm2c_instance.w2c_0x5F_global_base);
-    fprintf(fptr, "w2c_0x5F_memory_base: 0x%x\n", wasm2c_instance.w2c_0x5F_memory_base);
-    fprintf(fptr, "w2c_0x5F_table_base: 0x%x\n\n", wasm2c_instance.w2c_0x5F_table_base);
-
-    // fprintf(fptr, "w2c_0x5F_libc: 0x%x\n", wasm2c_instance.w2c_0x5F_libc);
-    // fprintf(fptr, "w2c_0x5F_hwcap: 0x%x\n", wasm2c_instance.w2c_0x5F_hwcap);
-    fprintf(fptr, "w2c_0x5F_stdout_FILE: 0x%x\n", wasm2c_instance.w2c_0x5F_stdout_FILE);
-    fprintf(fptr, "w2c_0x5F_stderr_FILE: 0x%x\n", wasm2c_instance.w2c_0x5F_stderr_FILE);
-    // fprintf(fptr, "w2c_0x5F_libc: 0x%x\n", wasm2c_instance.w2c_0x5F_libc);
-    // fprintf(fptr, "w2c_0x5F_libc: 0x%x\n", wasm2c_instance.w2c_0x5F_libc);
-
-
-    fclose(fptr);
     // printf("dumping state succeeded (to %s)\n", state);
 
     // then we dump memory contents
