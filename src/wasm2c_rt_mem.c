@@ -202,7 +202,8 @@ void reset_wasm2c_memory(wasm_rt_memory_t* memory, uint8_t* data_start, size_t d
     // int i = madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_DONTNEED);
     // memset((void*)addr_to_wipe1, 0, 1);
     // memset((void*)addr_to_wipe1, 0, size_to_wipe1);
-    int i = mmap(memory->data, memory->size, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);;
+    // int i = mmap(memory->data, memory->size, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+    memset(memory->data, 0x0, memory->size);
     // int i2;
     // printf("attempted to mmap whole thing with success %d", i);
     // printf("1st madvising from 0x%llx w size 0x%zx w code %d\n",
