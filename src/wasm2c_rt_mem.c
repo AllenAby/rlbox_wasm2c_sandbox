@@ -192,8 +192,9 @@ void reset_wasm2c_memory(wasm_rt_memory_t* memory, uint8_t* data_start, size_t d
     addr_to_wipe2 = addr_to_wipe2 / PAGESIZE * PAGESIZE;          // addr has to be page aligned
 
     // Two wipes to avoid dropping pages for the data segment just to reclaim them later.
-    madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_DONTNEED);
-    madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_DONTNEED);
+    // madvise((void*)addr_to_wipe1, size_to_wipe1, MADV_DONTNEED);
+    // madvise((void*)addr_to_wipe2, size_to_wipe2, MADV_DONTNEED);
+    memset(memory->data, 0x0, memory->size);
     
     #else
     // If not on linux, we default to the safe but slower memset() to wipe sandbox memory.
