@@ -482,7 +482,7 @@ u32 w2c_wasi__snapshot__preview1_fd_write(
   u32 iovcnt,
   u32 pnum)
 {
-  return WASI_BADF_ERROR; // return to prevent printing
+  // return WASI_BADF_ERROR; // return to prevent printing
   if (fd != WASM_STDOUT && fd != WASM_STDERR) {
     return WASI_BADF_ERROR;
   }
