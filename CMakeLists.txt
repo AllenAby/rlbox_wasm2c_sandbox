@@ -15,7 +15,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(SANDBOX_PRINTING "Option description" OFF)
 
 if(SANDBOX_PRINTING)
-  add_definitions(-DALLOW_SANDBOX_PRINTING)
+  add_compile_definitions(ALLOW_SANDBOX_PRINTING)
 endif()
 
 option(DEV "Use settings suitable for dev contributions to rlbox" OFF)
