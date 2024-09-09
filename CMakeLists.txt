@@ -12,6 +12,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(SANDBOX_PRINTING "Option description" OFF)
+
+if(SANDBOX_PRINTING)
+  add_definitions(-DALLOW_SANDBOX_PRINTING)
+endif()
+
 option(DEV "Use settings suitable for dev contributions to rlbox" OFF)
 
 file(GLOB_RECURSE
