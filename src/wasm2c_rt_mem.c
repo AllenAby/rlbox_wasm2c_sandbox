@@ -181,11 +181,11 @@ void destroy_wasm2c_memory(wasm_rt_memory_t* memory)
 void reset_wasm2c_memory(wasm_rt_memory_t* memory, uint8_t* data_start, size_t data_size){
   if (memory->data != 0) {
     const size_t opt_offset = 0;
-    const uint64_t addr_to_wipe1 = memory->data;
-    const uint64_t size_to_wipe1 = data_start - memory->data;
+    const uint64_t addr_to_wipe1 = (uint64_t)memory->data;
+    const uint64_t size_to_wipe1 = (uint64_t)(data_start - memory->data);
     const uint64_t PAGESIZE = 4096; //sysconf(_SC_PAGESIZE);
-    uint64_t addr_to_wipe2 = (data_start + data_size); 
-    const uint64_t size_to_wipe2 = memory->size + memory->data - addr_to_wipe2;
+    uint64_t addr_to_wipe2 = (uint64_t)(data_start + data_size); 
+    const uint64_t size_to_wipe2 = (uint64_t)(memory->size + memory->data - addr_to_wipe2);
 
     #ifdef __linux__
     // If we are using linux, we can use madvise() instead of memset because it's faster.
